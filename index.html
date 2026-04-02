@@ -3,97 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker - Firebase</title>
-    
+    <title>Expense Tracker - Fixed Login</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
-        :root { --primary: #1a73e8; --bg: #f0f2f5; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 0; }
-        
-        /* Loading Overlay */
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; justify-content:center; align-items:center; z-index:999; }
-        
-        .page { display: none; padding: 15px; max-width: 500px; margin: auto; min-height: 100vh; }
+        :root { --primary: #1a73e8; --bg: #f8f9fa; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; }
+        .page { display: none; padding: 20px; max-width: 500px; margin: auto; }
         .active { display: block; }
-        
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; transition: 0.2s; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:active { transform: scale(0.98); }
-        
-        .nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; outline: none; }
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .history-item { border-bottom: 1px solid #f0f0f0; padding: 12px 0; }
+        #loading { text-align: center; margin-top: 50px; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        .nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
-<div id="loader">မှတ်သားထားသည်များကို စစ်ဆေးနေပါသည်...</div>
+    <div id="loading">စစ်ဆေးနေပါသည်...</div>
 
-<div id="loginPage" class="page">
-    <div style="text-align: center; margin-top: 80px;">
-        <h1 style="color: var(--primary); font-size: 40px;">💰</h1>
-        <h2>Expense Tracker</h2>
-        <p style="color: #666;">စာရင်းများသိမ်းဆည်းရန် အကောင့်ဝင်ပါ</p>
-        <div class="card" style="margin-top: 40px;">
+    <div id="loginPage" class="page">
+        <div class="card" style="margin-top: 80px; text-align: center;">
+            <h2>💰 Expense Tracker</h2>
+            <p>အသုံးပြုရန် အကောင့်ဝင်ပါ</p>
             <button class="btn btn-primary" onclick="login()">Google ဖြင့် Login ဝင်မည်</button>
         </div>
     </div>
-</div>
 
-<div id="mainPage" class="page">
-    <div class="nav">
-        <div>မင်္ဂလာပါ၊ <b id="userDisplay">...</b></div>
-        <button onclick="logout()" style="border:none; background:none; color:#ea4335; font-weight:bold;">Logout</button>
-    </div>
-
-    <div class="card" style="margin-top: 15px;">
-        <h3 style="margin-top:0;">ယနေ့စာရင်းသွင်းရန်</h3>
-        <label><small>ရက်စွဲ</small></label>
-        <input type="date" id="dateInput">
-        
-        <div class="grid-inputs">
-            <div><label><small>မနက်စာ</small></label><input type="number" id="bCost" placeholder="0"></div>
-            <div><label><small>နေ့လည်စာ</small></label><input type="number" id="lCost" placeholder="0"></div>
-            <div><label><small>ညစာ</small></label><input type="number" id="dCost" placeholder="0"></div>
-            <div><label><small>အခြား</small></label><input type="number" id="oCost" placeholder="0"></div>
+    <div id="mainPage" class="page">
+        <div class="nav">
+            <b id="userDisplay">User</b>
+            <button onclick="logout()" style="color:red; border:none; background:none;">ထွက်ရန်</button>
         </div>
-
-        <select id="otherType">
-            <option value="none">-- အခြားအသုံးစရိတ်အမျိုးအစား --</option>
-            <option value="မုန့်/ရေဗူး">🥤 မုန့်/ရေဗူး</option>
-            <option value="ပိုက်ဆံချေး">💸 ပိုက်ဆံချေး</option>
-            <option value="ခရီးစရိတ်">🚕 ခရီးစရိတ်</option>
-            <option value="အထွေထွေ">✨ အထွေထွေ</option>
-        </select>
-        <input type="text" id="note" placeholder="မှတ်ချက်...">
-        
-        <button class="btn btn-primary" id="saveBtn" onclick="saveData()">စာရင်းသိမ်းမည်</button>
+        <div class="card" style="margin-top:20px;">
+            <h3>စာရင်းသွင်းရန်</h3>
+            <input type="date" id="dateInput">
+            <input type="number" id="cost" placeholder="ပမာဏ (Ks)">
+            <input type="text" id="note" placeholder="မှတ်ချက်">
+            <button class="btn btn-primary" onclick="saveData()">သိမ်းဆည်းမည်</button>
+        </div>
+        <div id="history" style="margin-top:20px;"></div>
     </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <button class="btn" onclick="toggleView('chartSection')" style="background:#34a853; color:white;">📊 Chart</button>
-        <button class="btn" onclick="toggleView('historySection')" style="background:#fbbc05; color:white;">📜 History</button>
-    </div>
-
-    <div id="chartSection" class="card" style="margin-top:20px; display:none;">
-        <canvas id="expenseChart" height="250"></canvas>
-    </div>
-
-    <div id="historySection" class="card" style="margin-top:20px; display:none;">
-        <h4>နောက်ဆုံးမှတ်တမ်းများ</h4>
-        <div id="historyList" style="max-height: 300px; overflow-y: auto;"></div>
-    </div>
-</div>
 
 <script>
-    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyDzEMJWMm6b1bBg2oKcUoYfsUAkhoNoZW4",
         authDomain: "my-expense-app-18a2a.firebaseapp.com",
@@ -107,115 +62,44 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Login function
     function login() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        // GitHub Pages အတွက် Redirect စနစ်က အကောင်းဆုံးဖြစ်သည်
         auth.signInWithRedirect(provider);
     }
 
-    // Logout function
     function logout() {
-        auth.signOut().then(() => {
-            window.location.reload();
-        });
+        auth.signOut().then(() => location.reload());
     }
 
-    // --- Authentication State Observer ---
+    // --- ဤနေရာသည် Loop ပြဿနာကို ဖြေရှင်းသည့် အပိုင်းဖြစ်သည် ---
     auth.onAuthStateChanged((user) => {
-        const loader = document.getElementById('loader');
-        const loginPage = document.getElementById('loginPage');
-        const mainPage = document.getElementById('mainPage');
-
-        loader.style.display = 'none'; // Check ပြီးရင် loading ပိတ်မယ်
-
+        document.getElementById('loading').style.display = 'none';
         if (user) {
-            loginPage.classList.remove('active');
-            mainPage.classList.add('active');
+            // User ရှိလျှင် Login Page ကို ဖျောက်ပြီး Main Page ကို ပြသည်
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('mainPage').classList.add('active');
             document.getElementById('userDisplay').innerText = user.displayName;
             document.getElementById('dateInput').valueAsDate = new Date();
-            loadHistory();
         } else {
-            loginPage.classList.add('active');
-            mainPage.classList.remove('active');
+            // User မရှိလျှင် Login Page ကိုသာ ပြသည်
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('mainPage').classList.remove('active');
         }
     });
 
-    // Save Data to Firestore
     async function saveData() {
         const user = auth.currentUser;
-        if(!user) return;
-
-        const btn = document.getElementById('saveBtn');
-        btn.disabled = true;
-        btn.innerText = "သိမ်းဆည်းနေပါသည်...";
-
-        const entry = {
+        const data = {
             uid: user.uid,
-            date: document.getElementById('dateInput').value,
-            b: Number(document.getElementById('bCost').value) || 0,
-            l: Number(document.getElementById('lCost').value) || 0,
-            d: Number(document.getElementById('dCost').value) || 0,
-            o: Number(document.getElementById('oCost').value) || 0,
-            type: document.getElementById('otherType').value,
+            amount: Number(document.getElementById('cost').value),
             note: document.getElementById('note').value,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            date: document.getElementById('dateInput').value,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
-
         try {
-            await db.collection("expenses").add(entry);
-            alert("စာရင်းမှတ်ပြီးပါပြီ!");
-            location.reload();
-        } catch (e) {
-            alert("Error: " + e.message);
-            btn.disabled = false;
-            btn.innerText = "စာရင်းသိမ်းမည်";
-        }
-    }
-
-    function toggleView(id) {
-        const el = document.getElementById(id);
-        el.style.display = (el.style.display === 'none') ? 'block' : 'none';
-        if(id === 'chartSection') renderChart();
-    }
-
-    async function loadHistory() {
-        const user = auth.currentUser;
-        const snapshot = await db.collection("expenses")
-            .where("uid", "==", user.uid)
-            .orderBy("date", "desc").limit(15).get();
-        
-        let html = "";
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            const total = d.b + d.l + d.d + d.o;
-            html += `<div class="history-item">
-                <b>${d.date}</b> - <span style="color:var(--primary)">${total.toLocaleString()} Ks</span><br>
-                <small style="color:#777;">${d.type !== 'none' ? d.type : ''} ${d.note ? '• ' + d.note : ''}</small>
-            </div>`;
-        });
-        document.getElementById('historyList').innerHTML = html || "မှတ်တမ်းမရှိသေးပါ။";
-    }
-
-    let myChart;
-    async function renderChart() {
-        const user = auth.currentUser;
-        const snapshot = await db.collection("expenses").where("uid", "==", user.uid).get();
-        let sums = [0, 0, 0, 0];
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            sums[0] += d.b; sums[1] += d.l; sums[2] += d.d; sums[3] += d.o;
-        });
-        const ctx = document.getElementById('expenseChart').getContext('2d');
-        if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['မနက်', 'နေ့လည်', 'ညစာ', 'အခြား'],
-                datasets: [{ data: sums, backgroundColor: ['#4285F4', '#EA4335', '#FBBC05', '#34A853'] }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+            await db.collection("expenses").add(data);
+            alert("သိမ်းပြီးပါပြီ!");
+        } catch (e) { alert(e.message); }
     }
 </script>
 </body>
