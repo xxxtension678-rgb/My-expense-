@@ -3,72 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker - စာရင်းသွင်းရန်</title>
-    
+    <title>Professional Expense Tracker</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #1a73e8; --bg: #f8f9fa; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
-        .page { display: none; padding: 20px; max-width: 450px; margin: auto; }
+        
+        /* Header & Profile */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
+        .profile-img { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid var(--primary); }
+        .dropdown { display: none; position: absolute; right: 15px; top: 55px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; width: 150px; overflow: hidden; z-index: 200; }
+        .dropdown div { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
+        .dropdown div:hover { background: #f0f2f5; }
+
+        /* Tables & UI */
+        .page { display: none; padding: 15px; max-width: 600px; margin: auto; }
         .active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-blue { background: var(--primary); color: white; }
-        #loading { text-align: center; margin-top: 50px; font-weight: bold; color: var(--primary); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th { background: #e8f0fe; position: sticky; top: 56px; z-index: 10; padding: 10px; border: 1px solid #ddd; }
+        td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        input[type="number"], input[type="text"] { width: 100%; border: none; outline: none; padding: 5px; background: transparent; }
+        .save-bar { position: fixed; bottom: 20px; right: 20px; }
+        .fab { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; border: none; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; }
+        
+        /* Filter Section */
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        select { flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
-    <div id="loading">ခဏစောင့်ပါ...</div>
-
-    <div id="loginPage" class="page">
-        <div class="card" style="text-align: center; margin-top: 60px;">
-            <h1 style="color: var(--primary);">💰 Expense Tracker</h1>
-            <p>စာရင်းသွင်းရန်အတွက် Google အကောင့်ဖြင့် ဝင်ပါ</p>
-            <button class="btn btn-blue" onclick="login()">Google ဖြင့် Login ဝင်မည်</button>
+    <div class="header">
+        <div id="currentMonthYear" style="font-weight: bold; color: var(--primary);">April 2026</div>
+        <div style="position: relative;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="userPhoto" class="profile-img" onclick="toggleDropdown()">
+            <div id="myDropdown" class="dropdown">
+                <div onclick="showPage('mainPage')">🏠 Main App</div>
+                <div onclick="showPage('historyPage')">📜 History</div>
+                <div onclick="showPage('chartPage')">📊 Charts</div>
+                <div onclick="logout()" style="color: red;">🚪 Logout</div>
+            </div>
         </div>
     </div>
 
-    <div id="mainPage" class="page">
-        <div class="nav">
-            <span id="userName" style="font-weight: bold;">...</span>
-            <button onclick="logout()" style="color: red; border: none; background: none; font-weight: bold;">ထွက်ရန်</button>
-        </div>
+    <div id="mainPage" class="page active">
+        <h3>ယနေ့စာရင်းသွင်းရန်</h3>
+        <table id="inputTable">
+            <thead>
+                <tr>
+                    <th>မနက်စာ</th>
+                    <th>နေ့လည်စာ</th>
+                    <th>ညစာ</th>
+                    <th>အခြား</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="number" id="b" placeholder="0"></td>
+                    <td><input type="number" id="l" placeholder="0"></td>
+                    <td><input type="number" id="d" placeholder="0"></td>
+                    <td><input type="number" id="o" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><input type="text" id="note" placeholder="မှတ်ချက်ရေးရန်..."></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="fab save-bar" onclick="saveData()">💾</button>
+    </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <h3 style="margin-top: 0;">ငွေစာရင်းသွင်းရန်</h3>
-            <label><small>ရက်စွဲ</small></label>
-            <input type="date" id="dateInput">
-            
-            <label><small>ပမာဏ (Ks)</small></label>
-            <input type="number" id="amount" placeholder="0">
-            
-            <label><small>အမျိုးအစား</small></label>
-            <select id="category">
-                <option value="အစားအသောက်">🍔 အစားအသောက်</option>
-                <option value="သွားလာရေး">🚕 သွားလာရေး</option>
-                <option value="အထွေထွေ">✨ အထွေထွေ</option>
+    <div id="historyPage" class="page">
+        <h3>မှတ်တမ်းဟောင်းများ</h3>
+        <div class="filter-bar">
+            <select id="histYear"><option value="2026">2026</option></select>
+            <select id="histMonth">
+                <option value="01">ဇန်နဝါရီ</option><option value="04" selected>ဧပြီ</option>
             </select>
-
-            <label><small>မှတ်ချက်</small></label>
-            <input type="text" id="note" placeholder="မှတ်ချက်ရေးရန်...">
-            
-            <button class="btn btn-blue" id="saveBtn" onclick="saveData()">သိမ်းဆည်းမည်</button>
+            <button onclick="loadHistory()">ရှာရန်</button>
         </div>
+        <table id="historyTable">
+            <thead><tr><th>ရက်စွဲ</th><th>မနက်</th><th>နေ့လည်</th><th>ညစာ</th><th>အခြား</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
 
-        <div id="history" style="margin-top: 20px;">
-            <h4>ယနေ့မှတ်တမ်းများ</h4>
-            <div id="dataList">မှတ်တမ်းမရှိသေးပါ။</div>
+    <div id="chartPage" class="page">
+        <h3>အသုံးစရိတ် Chart</h3>
+        <div class="filter-bar">
+            <select id="chartType" onchange="renderChart()"><option value="month">လအလိုက်</option><option value="year">နှစ်အလိုက်</option></select>
+        </div>
+        <div class="card" style="background:white; padding:15px; border-radius:10px;">
+            <canvas id="myChart" height="300"></canvas>
         </div>
     </div>
 
 <script>
-    // Firebase Config (သင့်ရဲ့ Screenshot ထဲက အချက်အလက်များ)
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDzEMJWMm6b1bBg2oKcUoYfsUAkhoNoZW4",
         authDomain: "my-expense-app-18a2a.firebaseapp.com",
@@ -77,82 +110,80 @@
         messagingSenderId: "987816810795",
         appId: "1:987816810795:web:b78430ae1326cb62f3cd6e"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    function login() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider);
+    // UI Logic
+    function toggleDropdown() { document.getElementById("myDropdown").style.display = (document.getElementById("myDropdown").style.display === "block") ? "none" : "block"; }
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        toggleDropdown();
+        if(pageId === 'chartPage') renderChart();
     }
 
-    function logout() {
-        auth.signOut().then(() => location.reload());
-    }
-
-    // --- အကောင့်ဝင်ထားသူကို ငွေစာရင်းသွင်းသည့်နေရာသို့ တန်းပို့ပေးမည့်အပိုင်း ---
-    auth.onAuthStateChanged((user) => {
-        document.getElementById('loading').style.display = 'none';
+    // Auth & Data
+    auth.onAuthStateChanged(user => {
         if (user) {
-            // အကောင့်ဝင်ပြီးသားဆိုလျှင် Dashboard ကိုပြပါ
-            document.getElementById('loginPage').classList.remove('active');
-            document.getElementById('mainPage').classList.add('active');
-            document.getElementById('userName').innerText = user.displayName;
-            document.getElementById('dateInput').valueAsDate = new Date();
-            loadHistory();
+            document.getElementById('userPhoto').src = user.photoURL || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+            const now = new Date();
+            document.getElementById('currentMonthYear').innerText = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
         } else {
-            // အကောင့်မဝင်ရသေးလျှင် Login Page ကိုပြပါ
-            document.getElementById('loginPage').classList.add('active');
-            document.getElementById('mainPage').classList.remove('active');
+            // Login မဝင်ထားရင် Google Login သို့ Redirect လုပ်မည်
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithRedirect(provider);
         }
     });
 
     async function saveData() {
         const user = auth.currentUser;
-        if (!user) return;
-
-        const btn = document.getElementById('saveBtn');
-        btn.disabled = true; btn.innerText = "သိမ်းနေသည်...";
-
-        const data = {
+        const entry = {
             uid: user.uid,
-            date: document.getElementById('dateInput').value,
-            amount: Number(document.getElementById('amount').value),
-            category: document.getElementById('category').value,
+            date: new Date().toISOString().split('T')[0],
+            b: Number(document.getElementById('b').value) || 0,
+            l: Number(document.getElementById('l').value) || 0,
+            d: Number(document.getElementById('d').value) || 0,
+            o: Number(document.getElementById('o').value) || 0,
             note: document.getElementById('note').value,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
-
-        try {
-            await db.collection("expenses").add(data);
-            alert("သိမ်းဆည်းပြီးပါပြီ");
-            document.getElementById('amount').value = "";
-            document.getElementById('note').value = "";
-            loadHistory();
-        } catch (e) {
-            alert("Error: " + e.message);
-        } finally {
-            btn.disabled = false; btn.innerText = "သိမ်းဆည်းမည်";
-        }
+        await db.collection("expenses").add(entry);
+        alert("သိမ်းပြီးပါပြီ!");
+        location.reload();
     }
 
     async function loadHistory() {
         const user = auth.currentUser;
+        const month = document.getElementById('histMonth').value;
+        const year = document.getElementById('histYear').value;
         const snapshot = await db.collection("expenses")
             .where("uid", "==", user.uid)
-            .orderBy("timestamp", "desc").limit(5).get();
+            .where("date", ">=", `${year}-${month}-01`)
+            .where("date", "<=", `${year}-${month}-31`)
+            .get();
         
         let html = "";
         snapshot.forEach(doc => {
             const d = doc.data();
-            html += `<div class="card" style="font-size: 14px;">
-                <b>${d.date}</b> - ${d.amount} Ks (${d.category}) <br>
-                <small>${d.note || ''}</small>
-            </div>`;
+            html += `<tr><td>${d.date.split('-')[2]}</td><td>${d.b}</td><td>${d.l}</td><td>${d.d}</td><td>${d.o}</td></tr>`;
         });
-        if(html) document.getElementById('dataList').innerHTML = html;
+        document.getElementById('historyBody').innerHTML = html || "<tr><td colspan='5'>စာရင်းမရှိပါ</td></tr>";
     }
+
+    let chartInstance;
+    async function renderChart() {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if(chartInstance) chartInstance.destroy();
+        
+        // စမ်းသပ်ရန် Data (Firestore မှ data ဆွဲရန် logic ထည့်နိုင်သည်)
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: ['မနက်', 'နေ့လည်', 'ညစာ', 'အခြား'], datasets: [{ label: 'အသုံးစရိတ် (Ks)', data: [5000, 7000, 6000, 2000], backgroundColor: '#1a73e8' }] }
+        });
+    }
+
+    function logout() { auth.signOut().then(() => location.reload()); }
 </script>
 </body>
 </html>
