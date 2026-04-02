@@ -3,52 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker - Fixed Login</title>
+    <title>Expense Tracker - စာရင်းသွင်းရန်</title>
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root { --primary: #1a73e8; --bg: #f8f9fa; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; }
-        .page { display: none; padding: 20px; max-width: 500px; margin: auto; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .page { display: none; padding: 20px; max-width: 450px; margin: auto; }
         .active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .btn-primary { background: var(--primary); color: white; }
-        #loading { text-align: center; margin-top: 50px; font-weight: bold; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         .nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-blue { background: var(--primary); color: white; }
+        #loading { text-align: center; margin-top: 50px; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="loading">စစ်ဆေးနေပါသည်...</div>
+    <div id="loading">ခဏစောင့်ပါ...</div>
 
     <div id="loginPage" class="page">
-        <div class="card" style="margin-top: 80px; text-align: center;">
-            <h2>💰 Expense Tracker</h2>
-            <p>အသုံးပြုရန် အကောင့်ဝင်ပါ</p>
-            <button class="btn btn-primary" onclick="login()">Google ဖြင့် Login ဝင်မည်</button>
+        <div class="card" style="text-align: center; margin-top: 60px;">
+            <h1 style="color: var(--primary);">💰 Expense Tracker</h1>
+            <p>စာရင်းသွင်းရန်အတွက် Google အကောင့်ဖြင့် ဝင်ပါ</p>
+            <button class="btn btn-blue" onclick="login()">Google ဖြင့် Login ဝင်မည်</button>
         </div>
     </div>
 
     <div id="mainPage" class="page">
         <div class="nav">
-            <b id="userDisplay">User</b>
-            <button onclick="logout()" style="color:red; border:none; background:none;">ထွက်ရန်</button>
+            <span id="userName" style="font-weight: bold;">...</span>
+            <button onclick="logout()" style="color: red; border: none; background: none; font-weight: bold;">ထွက်ရန်</button>
         </div>
-        <div class="card" style="margin-top:20px;">
-            <h3>စာရင်းသွင်းရန်</h3>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3 style="margin-top: 0;">ငွေစာရင်းသွင်းရန်</h3>
+            <label><small>ရက်စွဲ</small></label>
             <input type="date" id="dateInput">
-            <input type="number" id="cost" placeholder="ပမာဏ (Ks)">
-            <input type="text" id="note" placeholder="မှတ်ချက်">
-            <button class="btn btn-primary" onclick="saveData()">သိမ်းဆည်းမည်</button>
+            
+            <label><small>ပမာဏ (Ks)</small></label>
+            <input type="number" id="amount" placeholder="0">
+            
+            <label><small>အမျိုးအစား</small></label>
+            <select id="category">
+                <option value="အစားအသောက်">🍔 အစားအသောက်</option>
+                <option value="သွားလာရေး">🚕 သွားလာရေး</option>
+                <option value="အထွေထွေ">✨ အထွေထွေ</option>
+            </select>
+
+            <label><small>မှတ်ချက်</small></label>
+            <input type="text" id="note" placeholder="မှတ်ချက်ရေးရန်...">
+            
+            <button class="btn btn-blue" id="saveBtn" onclick="saveData()">သိမ်းဆည်းမည်</button>
         </div>
-        <div id="history" style="margin-top:20px;"></div>
+
+        <div id="history" style="margin-top: 20px;">
+            <h4>ယနေ့မှတ်တမ်းများ</h4>
+            <div id="dataList">မှတ်တမ်းမရှိသေးပါ။</div>
+        </div>
     </div>
 
 <script>
+    // Firebase Config (သင့်ရဲ့ Screenshot ထဲက အချက်အလက်များ)
     const firebaseConfig = {
         apiKey: "AIzaSyDzEMJWMm6b1bBg2oKcUoYfsUAkhoNoZW4",
         authDomain: "my-expense-app-18a2a.firebaseapp.com",
@@ -71,17 +91,18 @@
         auth.signOut().then(() => location.reload());
     }
 
-    // --- ဤနေရာသည် Loop ပြဿနာကို ဖြေရှင်းသည့် အပိုင်းဖြစ်သည် ---
+    // --- အကောင့်ဝင်ထားသူကို ငွေစာရင်းသွင်းသည့်နေရာသို့ တန်းပို့ပေးမည့်အပိုင်း ---
     auth.onAuthStateChanged((user) => {
         document.getElementById('loading').style.display = 'none';
         if (user) {
-            // User ရှိလျှင် Login Page ကို ဖျောက်ပြီး Main Page ကို ပြသည်
+            // အကောင့်ဝင်ပြီးသားဆိုလျှင် Dashboard ကိုပြပါ
             document.getElementById('loginPage').classList.remove('active');
             document.getElementById('mainPage').classList.add('active');
-            document.getElementById('userDisplay').innerText = user.displayName;
+            document.getElementById('userName').innerText = user.displayName;
             document.getElementById('dateInput').valueAsDate = new Date();
+            loadHistory();
         } else {
-            // User မရှိလျှင် Login Page ကိုသာ ပြသည်
+            // အကောင့်မဝင်ရသေးလျှင် Login Page ကိုပြပါ
             document.getElementById('loginPage').classList.add('active');
             document.getElementById('mainPage').classList.remove('active');
         }
@@ -89,17 +110,48 @@
 
     async function saveData() {
         const user = auth.currentUser;
+        if (!user) return;
+
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true; btn.innerText = "သိမ်းနေသည်...";
+
         const data = {
             uid: user.uid,
-            amount: Number(document.getElementById('cost').value),
-            note: document.getElementById('note').value,
             date: document.getElementById('dateInput').value,
+            amount: Number(document.getElementById('amount').value),
+            category: document.getElementById('category').value,
+            note: document.getElementById('note').value,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
+
         try {
             await db.collection("expenses").add(data);
-            alert("သိမ်းပြီးပါပြီ!");
-        } catch (e) { alert(e.message); }
+            alert("သိမ်းဆည်းပြီးပါပြီ");
+            document.getElementById('amount').value = "";
+            document.getElementById('note').value = "";
+            loadHistory();
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            btn.disabled = false; btn.innerText = "သိမ်းဆည်းမည်";
+        }
+    }
+
+    async function loadHistory() {
+        const user = auth.currentUser;
+        const snapshot = await db.collection("expenses")
+            .where("uid", "==", user.uid)
+            .orderBy("timestamp", "desc").limit(5).get();
+        
+        let html = "";
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            html += `<div class="card" style="font-size: 14px;">
+                <b>${d.date}</b> - ${d.amount} Ks (${d.category}) <br>
+                <small>${d.note || ''}</small>
+            </div>`;
+        });
+        if(html) document.getElementById('dataList').innerHTML = html;
     }
 </script>
 </body>
