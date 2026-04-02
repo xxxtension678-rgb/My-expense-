@@ -2,127 +2,128 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker - Elegant UI</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Glassmorphism Expense Tracker</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-        :root { --accent: #2d3436; --text: #2d3436; --soft-bg: #f9f9f9; --border: #ececec; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: white; color: var(--text); margin: 0; }
+        :root { --glass: rgba(255, 255, 255, 0.2); --border: rgba(255, 255, 255, 0.3); }
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         
-        /* Navigation & Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: sticky; top: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); }
-        .month-label { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.5px; }
-        .profile-trigger { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; cursor: pointer; background: #eee; }
+        body { 
+            margin: 0; padding: 0; height: 100vh;
+            font-family: -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); /* Deep Blue Gradient */
+            color: #fff; display: flex; flex-direction: column; overflow: hidden;
+        }
 
-        /* Elegant Dropdown */
-        .menu { display: none; position: absolute; right: 20px; top: 70px; background: white; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 180px; overflow: hidden; }
-        .menu div { padding: 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.2s; }
-        .menu div:hover { background: var(--soft-bg); }
+        /* Glass Header */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 20px; background: var(--glass); backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border); z-index: 100;
+        }
+        .header-title { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+        .p-btn { width: 35px; height: 35px; border-radius: 50%; border: 1.5px solid #fff; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); }
+        .p-btn img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Pages */
-        .page { display: none; max-width: 600px; margin: 0 auto; padding: 20px; animation: fadeIn 0.4s ease; }
-        .active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Glass Cards */
+        .summary-area { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .glass-card { 
+            background: var(--glass); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 16px; padding: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #add8ff; margin-bottom: 5px; display: block; }
+        .val-input { background: transparent; border: none; outline: none; color: #fff; font-size: 18px; font-weight: 800; width: 100%; }
 
-        /* Minimalist Table */
-        .table-container { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 400px; }
-        th { background: var(--soft-bg); padding: 15px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
-        td { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; }
-        input { border: none; outline: none; width: 100%; text-align: center; font-size: 16px; color: var(--text); background: transparent; }
+        /* Table Section (Scrollable) */
+        .main-content { flex: 1; overflow-y: auto; padding: 0 10px 100px 10px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        thead th { 
+            position: sticky; top: 0; background: rgba(15, 32, 39, 0.9); 
+            padding: 10px 0; font-size: 10px; text-transform: uppercase; color: #add8ff; z-index: 10;
+        }
         
-        /* Floating Button (FAB) */
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; background: var(--accent); color: white; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+        /* Table Row Glass Effect */
+        tbody tr { background: rgba(255, 255, 255, 0.05); transition: 0.3s; }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.1); }
+        td { padding: 8px 2px; text-align: center; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+        td:first-child { border-left: 1.5px solid var(--border); border-radius: 10px 0 0 10px; font-weight: 800; width: 40px; }
+        td:last-child { border-right: 1.5px solid var(--border); border-radius: 0 10px 10px 0; }
 
-        /* Login Screen */
-        #loginPage { text-align: center; padding-top: 150px; }
-        .btn-login { padding: 15px 30px; border: 1px solid var(--accent); background: white; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .btn-login:hover { background: var(--accent); color: white; }
+        /* Input Box inside Table */
+        .amt-box { 
+            width: 90%; height: 32px; background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+            color: #fff; text-align: center; font-size: 14px; outline: none;
+        }
+        .amt-box:focus { border: 1.5px solid #007AFF; background: rgba(255, 255, 255, 0.2); }
+        .amt-box::placeholder { color: rgba(255, 255, 255, 0.2); }
 
-        /* History & Chart Filters */
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
-        select, .btn-small { padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: white; font-size: 14px; flex: 1; outline: none; }
+        /* Footer Info */
+        .footer-glass { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: var(--glass); backdrop-filter: blur(20px);
+            padding: 20px; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sync-tag { font-size: 10px; font-weight: 700; color: #4cd964; text-transform: uppercase; }
+
+        /* Menu Glass */
+        .menu { 
+            display: none; position: absolute; right: 20px; top: 60px; 
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
+            border: 1px solid var(--border); border-radius: 12px; width: 180px; z-index: 200; overflow: hidden;
+        }
+        .menu div { padding: 15px; font-size: 13px; font-weight: 600; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+        .menu div:hover { background: rgba(255, 255, 255, 0.1); }
     </style>
 </head>
 <body>
 
-    <header id="appHeader" style="display: none;">
-        <div class="month-label" id="dateDisplay">April 2026</div>
+    <header>
+        <div class="header-title">2026 APRIL</div>
         <div style="position: relative;">
-            <img src="" id="userImg" class="profile-trigger" onclick="toggleMenu()">
-            <div id="userMenu" class="menu">
-                <div onclick="nav('mainPage')">Main App</div>
-                <div onclick="nav('historyPage')">History</div>
-                <div onclick="nav('chartPage')">Charts</div>
-                <div onclick="logout()" style="color: #e74c3c;">Logout</div>
+            <div class="p-btn" onclick="toggleMenu()" id="pBtn">👤</div>
+            <div id="menu" class="menu">
+                <div onclick="location.reload()">REFRESH</div>
+                <div onclick="alert('History View')">HISTORY</div>
+                <div onclick="alert('Analytics')">ANALYTICS</div>
+                <div id="authBtn" onclick="login()">LOGIN</div>
             </div>
         </div>
     </header>
 
-    <div id="loginPage" class="page active">
-        <h1 style="font-weight: 700; letter-spacing: -1px;">Minimal Expense</h1>
-        <p style="color: #888; margin-bottom: 40px;">စာရင်းသွင်းရန် အကောင့်ဝင်ပေးပါ။</p>
-        <button class="btn-login" onclick="login()">Sign in with Google</button>
-    </div>
-
-    <div id="mainPage" class="page">
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>မနက်</th>
-                        <th>နေ့လည်</th>
-                        <th>ညစာ</th>
-                        <th>အခြား</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><input type="number" id="b" placeholder="0"></td>
-                        <td><input type="number" id="l" placeholder="0"></td>
-                        <td><input type="number" id="d" placeholder="0"></td>
-                        <td><input type="number" id="o" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="4"><input type="text" id="note" placeholder="Note (optional)" style="text-align: left; padding-left: 10px; font-size: 14px; color: #888;"></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="summary-area">
+        <div class="glass-card">
+            <span class="label">Start Balance</span>
+            <input type="number" id="startBal" class="val-input" placeholder="Ks" oninput="calc()">
         </div>
-        <button class="fab" onclick="saveData()">+</button>
-    </div>
-
-    <div id="historyPage" class="page">
-        <div class="controls">
-            <select id="hYear"><option value="2026">2026</option></select>
-            <select id="hMonth">
-                <option value="01">Jan</option><option value="04" selected>Apr</option>
-            </select>
-            <button class="btn-small" onclick="fetchHistory()">Search</button>
-        </div>
-        <div class="table-container">
-            <table id="hTable">
-                <thead><tr><th>Day</th><th>B</th><th>L</th><th>D</th><th>O</th></tr></thead>
-                <tbody id="hBody"></tbody>
-            </table>
+        <div class="glass-card">
+            <span class="label">Remaining</span>
+            <div class="val-input" id="remBal">0 Ks</div>
         </div>
     </div>
 
-    <div id="chartPage" class="page">
-        <div class="controls">
-            <select onchange="updateChartType(this.value)"><option value="month">Monthly</option><option value="year">Yearly</option></select>
-        </div>
-        <canvas id="expenseChart" height="400"></canvas>
+    <div class="main-content">
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th><th>B</th><th>L</th><th>D</th><th>O</th>
+                </tr>
+            </thead>
+            <tbody id="grid"></tbody>
+        </table>
+    </div>
+
+    <div class="footer-glass">
+        <div class="sync-tag" id="syncStatus">Ready to Sync</div>
+        <div style="font-weight: 800; font-size: 16px;">Total: <span id="totalSpent" style="color:#4cd964">0</span> Ks</div>
     </div>
 
 <script>
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDzEMJWMm6b1bBg2oKcUoYfsUAkhoNoZW4",
         authDomain: "my-expense-app-18a2a.firebaseapp.com",
@@ -132,82 +133,66 @@
         appId: "1:987816810795:web:b78430ae1326cb62f3cd6e"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    // UI functions
-    function toggleMenu() { const m = document.getElementById('userMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-    function nav(id) { 
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        toggleMenu();
-        if(id === 'chartPage') initChart();
+    function toggleMenu() { const m = document.getElementById('menu'); m.style.display = m.style.display==='block'?'none':'block'; }
+    function login() { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+
+    // Generate 30 Days
+    const grid = document.getElementById('grid');
+    for (let i = 1; i <= 30; i++) {
+        grid.innerHTML += `
+            <tr>
+                <td>${i}</td>
+                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
+                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
+                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
+                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
+            </tr>
+        `;
     }
 
-    // Login (Auto-login မဖြစ်အောင် ဤနေရာတွင်သာ login လုပ်ခိုင်းသည်)
-    function login() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider);
+    let saveTimer;
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('.amt-box').forEach(inp => total += Number(inp.value) || 0);
+        const start = Number(document.getElementById('startBal').value) || 0;
+        
+        document.getElementById('totalSpent').innerText = total.toLocaleString();
+        document.getElementById('remBal').innerText = (start - total).toLocaleString() + " Ks";
+
+        // Auto Save Logic
+        document.getElementById('syncStatus').innerText = "Updating...";
+        document.getElementById('syncStatus').style.color = "#FF9500";
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(async () => {
+            const user = auth.currentUser;
+            if(!user) return;
+            const data = {
+                startBal: start,
+                expenses: Array.from(document.querySelectorAll('.amt-box')).map(i => Number(i.value) || 0),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection("monthly_data").doc(user.uid + "_2026-04").set(data);
+            document.getElementById('syncStatus').innerText = "Synced to Cloud";
+            document.getElementById('syncStatus').style.color = "#4cd964";
+        }, 1200);
     }
 
-    function logout() { auth.signOut().then(() => location.reload()); }
-
-    // Auth state observer
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            document.getElementById('loginPage').classList.remove('active');
-            document.getElementById('mainPage').classList.add('active');
-            document.getElementById('appHeader').style.display = 'flex';
-            document.getElementById('userImg').src = user.photoURL;
-            document.getElementById('dateDisplay').innerText = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    auth.onAuthStateChanged(async user => {
+        if(user) {
+            document.getElementById('pBtn').innerHTML = `<img src="${user.photoURL}">`;
+            const doc = await db.collection("monthly_data").doc(user.uid + "_2026-04").get();
+            if(doc.exists) {
+                const d = doc.data();
+                document.getElementById('startBal').value = d.startBal;
+                const inps = document.querySelectorAll('.amt-box');
+                d.expenses.forEach((v, i) => { if(v) inps[i].value = v; });
+                calc();
+            }
         }
     });
-
-    async function saveData() {
-        const user = auth.currentUser;
-        if(!user) return;
-        const entry = {
-            uid: user.uid,
-            date: new Date().toISOString().split('T')[0],
-            b: Number(document.getElementById('b').value) || 0,
-            l: Number(document.getElementById('l').value) || 0,
-            d: Number(document.getElementById('d').value) || 0,
-            o: Number(document.getElementById('o').value) || 0,
-            note: document.getElementById('note').value,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        await db.collection("expenses").add(entry);
-        alert("Saved.");
-        location.reload();
-    }
-
-    async function fetchHistory() {
-        const user = auth.currentUser;
-        const y = document.getElementById('hYear').value;
-        const m = document.getElementById('hMonth').value;
-        const snapshot = await db.collection("expenses")
-            .where("uid", "==", user.uid)
-            .where("date", ">=", `${y}-${m}-01`)
-            .where("date", "<=", `${y}-${m}-31`).get();
-        
-        let h = "";
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            h += `<tr><td>${d.date.split('-')[2]}</td><td>${d.b}</td><td>${d.l}</td><td>${d.d}</td><td>${d.o}</td></tr>`;
-        });
-        document.getElementById('hBody').innerHTML = h || "<tr><td colspan='5'>No records</td></tr>";
-    }
-
-    let chartObj;
-    function initChart() {
-        const ctx = document.getElementById('expenseChart').getContext('2d');
-        if(chartObj) chartObj.destroy();
-        chartObj = new Chart(ctx, {
-            type: 'line',
-            data: { labels: ['W1', 'W2', 'W3', 'W4'], datasets: [{ label: 'Weekly Spend', data: [12000, 19000, 15000, 22000], borderColor: '#2d3436', tension: 0.4 }] },
-            options: { responsive: true, plugins: { legend: { display: false } } }
-        });
-    }
 </script>
 </body>
 </html>
