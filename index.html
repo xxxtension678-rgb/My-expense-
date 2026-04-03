@@ -3,124 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glassmorphism Expense Tracker</title>
+    <title>lowercase monospace tracker</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --glass: rgba(255, 255, 255, 0.2); --border: rgba(255, 255, 255, 0.3); }
-        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        :root { --glass: rgba(255, 255, 255, 0.1); --border: rgba(255, 255, 255, 0.15); --accent: #00d4ff; }
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; 
+            font-family: 'monaco', 'consolas', monospace;
+            text-transform: lowercase; 
+        }
         
         body { 
             margin: 0; padding: 0; height: 100vh;
-            font-family: -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); /* Deep Blue Gradient */
-            color: #fff; display: flex; flex-direction: column; overflow: hidden;
+            background: #020111; 
+            color: #e0e0e0; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* Glass Header */
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; background: var(--glass); backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--border); z-index: 100;
+            padding: 12px 20px; background: rgba(255,255,255,0.03); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
         }
-        .header-title { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
-        .p-btn { width: 35px; height: 35px; border-radius: 50%; border: 1.5px solid #fff; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); }
+
+        .p-btn { 
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); 
+            cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
         .p-btn img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Glass Cards */
-        .summary-area { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
-        .glass-card { 
-            background: var(--glass); backdrop-filter: blur(10px);
-            border: 1px solid var(--border); border-radius: 16px; padding: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-        .label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #add8ff; margin-bottom: 5px; display: block; }
-        .val-input { background: transparent; border: none; outline: none; color: #fff; font-size: 18px; font-weight: 800; width: 100%; }
+        .summary-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        .glass-card { background: var(--glass); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+        .label { font-size: 10px; color: #888; margin-bottom: 4px; display: block; }
+        .val-input { background: transparent; border: none; outline: none; color: #fff; font-size: 16px; width: 100%; }
 
-        /* Table Section (Scrollable) */
-        .main-content { flex: 1; overflow-y: auto; padding: 0 10px 100px 10px; }
+        /* table & boxes fixed */
+        .main-content { flex: 1; overflow-y: auto; padding: 0 10px 90px 10px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        thead th { 
-            position: sticky; top: 0; background: rgba(15, 32, 39, 0.9); 
-            padding: 10px 0; font-size: 10px; text-transform: uppercase; color: #add8ff; z-index: 10;
-        }
+        thead th { position: sticky; top: 0; background: #020111; padding: 10px 0; font-size: 10px; color: var(--accent); z-index: 10; }
         
-        /* Table Row Glass Effect */
-        tbody tr { background: rgba(255, 255, 255, 0.05); transition: 0.3s; }
-        tbody tr:hover { background: rgba(255, 255, 255, 0.1); }
-        td { padding: 8px 2px; text-align: center; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
-        td:first-child { border-left: 1.5px solid var(--border); border-radius: 10px 0 0 10px; font-weight: 800; width: 40px; }
-        td:last-child { border-right: 1.5px solid var(--border); border-radius: 0 10px 10px 0; }
-
-        /* Input Box inside Table */
+        /* input boxes ပြန်ပေါ်အောင် style ပြန်ပြင်ထားပါတယ် */
         .amt-box { 
-            width: 90%; height: 32px; background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+            width: 90%; height: 35px; background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 6px;
             color: #fff; text-align: center; font-size: 14px; outline: none;
+            display: inline-block; -webkit-appearance: none;
         }
-        .amt-box:focus { border: 1.5px solid #007AFF; background: rgba(255, 255, 255, 0.2); }
-        .amt-box::placeholder { color: rgba(255, 255, 255, 0.2); }
+        .amt-box:focus { border: 1px solid var(--accent) !important; background: rgba(0, 212, 255, 0.1) !important; }
 
-        /* Footer Info */
         .footer-glass { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: var(--glass); backdrop-filter: blur(20px);
-            padding: 20px; border-top: 1px solid var(--border);
+            position: fixed; bottom: 0; left: 0; right: 0; background: rgba(2, 1, 17, 0.9);
+            backdrop-filter: blur(20px); padding: 15px 20px; border-top: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
-        .sync-tag { font-size: 10px; font-weight: 700; color: #4cd964; text-transform: uppercase; }
 
-        /* Menu Glass */
         .menu { 
-            display: none; position: absolute; right: 20px; top: 60px; 
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
-            border: 1px solid var(--border); border-radius: 12px; width: 180px; z-index: 200; overflow: hidden;
+            display: none; position: absolute; right: 20px; top: 55px; 
+            background: #0f1035; border: 1px solid var(--border); border-radius: 8px; width: 160px; z-index: 200;
         }
-        .menu div { padding: 15px; font-size: 13px; font-weight: 600; border-bottom: 0.5px solid var(--border); cursor: pointer; }
-        .menu div:hover { background: rgba(255, 255, 255, 0.1); }
+        .menu div { padding: 12px; font-size: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="header-title">2026 APRIL</div>
+        <div>april_2026_ledger</div>
         <div style="position: relative;">
-            <div class="p-btn" onclick="toggleMenu()" id="pBtn">👤</div>
+            <div class="p-btn" onclick="toggleMenu()">
+                <span id="pPlaceholder">u</span>
+                <img id="userPhoto" style="display:none;">
+            </div>
             <div id="menu" class="menu">
-                <div onclick="location.reload()">REFRESH</div>
-                <div onclick="alert('History View')">HISTORY</div>
-                <div onclick="alert('Analytics')">ANALYTICS</div>
-                <div id="authBtn" onclick="login()">LOGIN</div>
+                <div onclick="alert('history')">[history]</div>
+                <div id="authAction" onclick="handleAuth()">[login]</div>
             </div>
         </div>
     </header>
 
     <div class="summary-area">
         <div class="glass-card">
-            <span class="label">Start Balance</span>
-            <input type="number" id="startBal" class="val-input" placeholder="Ks" oninput="calc()">
+            <span class="label">starting_bal</span>
+            <input type="number" id="startBal" class="val-input" placeholder="ks" oninput="calc()">
         </div>
         <div class="glass-card">
-            <span class="label">Remaining</span>
-            <div class="val-input" id="remBal">0 Ks</div>
+            <span class="label">remaining</span>
+            <div class="val-input" id="remBal">0 ks</div>
         </div>
     </div>
 
     <div class="main-content">
         <table>
             <thead>
-                <tr>
-                    <th>Day</th><th>B</th><th>L</th><th>D</th><th>O</th>
-                </tr>
+                <tr><th>day</th><th>mor</th><th>lun</th><th>din</th><th>otr</th></tr>
             </thead>
             <tbody id="grid"></tbody>
         </table>
     </div>
 
     <div class="footer-glass">
-        <div class="sync-tag" id="syncStatus">Ready to Sync</div>
-        <div style="font-weight: 800; font-size: 16px;">Total: <span id="totalSpent" style="color:#4cd964">0</span> Ks</div>
+        <div id="syncStatus" style="font-size: 9px; color: var(--accent);">status: ready</div>
+        <div style="font-size: 14px;">spent: <span id="totalSpent" style="color:var(--accent)">0</span></div>
     </div>
 
 <script>
@@ -136,53 +118,33 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    function toggleMenu() { const m = document.getElementById('menu'); m.style.display = m.style.display==='block'?'none':'block'; }
-    function login() { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+    function toggleMenu() { const m = document.getElementById('menu'); m.style.display = (m.style.display==='block')?'none':'block'; }
 
-    // Generate 30 Days
-    const grid = document.getElementById('grid');
-    for (let i = 1; i <= 30; i++) {
-        grid.innerHTML += `
-            <tr>
-                <td>${i}</td>
-                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
-                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
-                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
-                <td><input type="number" class="amt-box" placeholder="—" oninput="calc()"></td>
-            </tr>
-        `;
-    }
-
-    let saveTimer;
-    function calc() {
-        let total = 0;
-        document.querySelectorAll('.amt-box').forEach(inp => total += Number(inp.value) || 0);
-        const start = Number(document.getElementById('startBal').value) || 0;
-        
-        document.getElementById('totalSpent').innerText = total.toLocaleString();
-        document.getElementById('remBal').innerText = (start - total).toLocaleString() + " Ks";
-
-        // Auto Save Logic
-        document.getElementById('syncStatus').innerText = "Updating...";
-        document.getElementById('syncStatus').style.color = "#FF9500";
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(async () => {
-            const user = auth.currentUser;
-            if(!user) return;
-            const data = {
-                startBal: start,
-                expenses: Array.from(document.querySelectorAll('.amt-box')).map(i => Number(i.value) || 0),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await db.collection("monthly_data").doc(user.uid + "_2026-04").set(data);
-            document.getElementById('syncStatus').innerText = "Synced to Cloud";
-            document.getElementById('syncStatus').style.color = "#4cd964";
-        }, 1200);
+    // login logic fix
+    function handleAuth() {
+        if (auth.currentUser) {
+            auth.signOut().then(() => location.reload());
+        } else {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => {
+                console.error(err);
+                // popup ပိတ်ထားရင် redirect နဲ့ ပြန်ကြိုးစားမယ်
+                auth.signInWithRedirect(provider);
+            });
+        }
     }
 
     auth.onAuthStateChanged(async user => {
+        const authBtn = document.getElementById('authAction');
+        const photo = document.getElementById('userPhoto');
+        const placeholder = document.getElementById('pPlaceholder');
+
         if(user) {
-            document.getElementById('pBtn').innerHTML = `<img src="${user.photoURL}">`;
+            placeholder.style.display = 'none';
+            photo.src = user.photoURL;
+            photo.style.display = 'block';
+            authBtn.innerText = "[logout]";
+            
             const doc = await db.collection("monthly_data").doc(user.uid + "_2026-04").get();
             if(doc.exists) {
                 const d = doc.data();
@@ -193,6 +155,39 @@
             }
         }
     });
+
+    const grid = document.getElementById('grid');
+    for (let i = 1; i <= 30; i++) {
+        grid.innerHTML += `<tr>
+            <td>${i.toString().padStart(2, '0')}</td>
+            <td><input type="number" class="amt-box" oninput="calc()"></td>
+            <td><input type="number" class="amt-box" oninput="calc()"></td>
+            <td><input type="number" class="amt-box" oninput="calc()"></td>
+            <td><input type="number" class="amt-box" oninput="calc()"></td>
+        </tr>`;
+    }
+
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('.amt-box').forEach(inp => total += Number(inp.value) || 0);
+        const start = Number(document.getElementById('startBal').value) || 0;
+        document.getElementById('totalSpent').innerText = total.toLocaleString();
+        document.getElementById('remBal').innerText = (start - total).toLocaleString() + " ks";
+        
+        // auto save
+        const user = auth.currentUser;
+        if(user) {
+            document.getElementById('syncStatus').innerText = "status: syncing...";
+            db.collection("monthly_data").doc(user.uid + "_2026-04").set({
+                startBal: start,
+                expenses: Array.from(document.querySelectorAll('.amt-box')).map(i => Number(i.value) || 0),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                document.getElementById('syncStatus').innerText = "status: cloud_synced";
+            });
+        }
+    }
 </script>
 </body>
 </html>
+
